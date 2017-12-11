@@ -99,3 +99,7 @@ ENV/
 
 # mypy
 .mypy_cache/
+seq2seq_model/
+dataset/
+bot_config.json
+test.py
