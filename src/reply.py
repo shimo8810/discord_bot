@@ -26,7 +26,7 @@ async def on_message(message):
 
     print(message.channel)
     res = talker.response(message.content)
-    print(res)
+    print(message.content, " => ", res)
     await client.send_message(message.channel, res)
     # if message.content.startswith('!hello'):
     # msg = 'Hello {0.author.mention}'.format(message)
