@@ -55,7 +55,7 @@ class FakeDylerBot(discord.Client):
         else:
             if self.is_online:
                 res = self.talker.response(message.content)
-                print(message.content, " => ", res)
+                print(message.channel, ":", message.content, " => ", res)
                 await self.send_message(message.channel, res)
 
 def main():
