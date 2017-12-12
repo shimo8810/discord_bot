@@ -63,9 +63,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--vocab', '-v', type=str, default='seq2seq_model/vocab_skype_nucc.txt')
     parser.add_argument('--model', '-m', type=str, default='seq2seq_model/seq2seq_conversation.npz')
-    parser.add_argument('--gpu', '-g', type=int, default=-1)
-    parser.add_argument('--layer', '-l', type=int, default=3)
-    parser.add_argument('--unit', '-u', type=int, default=256)
+    # parser.add_argument('--gpu', '-g', type=int, default=-1)
+    # parser.add_argument('--layer', '-l', type=int, default=3)
+    # parser.add_argument('--unit', '-u', type=int, default=256)
     parser.add_argument('--dev', action='store_true', default=False)
     args = parser.parse_args()
 
