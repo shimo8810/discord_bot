@@ -1,7 +1,8 @@
+from os import path
 import argparse
 from tqdm import tqdm
 import numpy as np
-
+import subprocess
 import time
 import MeCab
 import mojimoji
@@ -9,11 +10,19 @@ import chainer
 from chainer import cuda
 import chainer.functions as F
 import chainer.links as L
-# from chainer import training
-# from chainer.training import extensions
 
 UNK = 0
 EOS = 1
+
+#PATH関連
+# このファイルの絶対パス
+FILE_PATH = path.dirname(path.abspath(__file__))
+# deep learningディレクトリのrootパス
+ROOT_PATH = path.normpath(path.join(FILE_PATH, '../'))
+
+mecab_tagger_option = '-Owakati -d '
+mecab_tagger_option += subprocess.check_output(['mecab-config', '--dicdir']).decode().strip()
+mecab_tagger_option += '/mecab-ipadic-neologd'
 
 def sequence_embed(embed, xs):
     # embedにまとめて入れるために区切りを保存する
@@ -102,7 +111,8 @@ def load_vocab(vocab_path):
     return word_ids
 
 def words2ids(txt):
-    tagger = MeCab.Tagger('-Owakati -d /usr/lib/mecab/dic/mecab-ipadic-neologd')
+    tagger = MeCab.Tagger(mecab_tagger_option)
+
     txt = mojimoji.zen_to_han(txt, kana=False)
     txt = tagger.parse(txt)
     txt = txt.strip().split(' ')
@@ -118,7 +128,13 @@ class Talker():
             chainer.cuda.get_device(gpu).use()
             self.model.to_gpu(gpu)
         chainer.serializers.load_npz(model_path, self.model)
+<<<<<<< HEAD
         self.tagger = MeCab.Tagger('-Owakati -d /usr/local/lib/mecab/dic/mecab-ipadic-neologd')
+=======
+
+        self.tagger = MeCab.Tagger(mecab_tagger_option)
+
+>>>>>>> fe680d84015e25a8120fc2256dad1c3eaef4e62d
 
     def _words2ids(self, txt):
         txt = mojimoji.zen_to_han(txt, kana=False)
@@ -137,25 +153,25 @@ class Talker():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--vocab', '-v', type=str, default='dataset/vocab.txt')
-    parser.add_argument('--seq_in', '-i', type=str, default='dataset/input_sequence.txt')
-    parser.add_argument('--seq_out', '-o', type=str, default='dataset/output_sequence.txt')
+    parser.add_argument('--vocab', '-v', type=str, default='seq2seq_model/vocab_skype_nucc.txt')
+    parser.add_argument('--model', '-m', type=str, default='seq2seq_model/seq2seq_conversation.npz')
     parser.add_argument('--gpu', '-g', type=int, default=-1)
     parser.add_argument('--layer', '-l', type=int, default=3)
     parser.add_argument('--unit', '-u', type=int, default=256)
     args = parser.parse_args()
 
-    # 辞書準備
-    word_ids = load_vocab('./dataset/vocab_skype_nucc.txt')
-    ids_word = {i:w for w, i in word_ids.items()}
-
     # モデル準備
-    print("# Test")
-    talker = Talker(vocab_path='./dataset/vocab_skype_nucc.txt', model_path='dataset/seq2seq_conversation.npz')
-    txt = '暖房がつかない実験室寒すぎるし,是非とも計算をガンガン回して暖かくして欲しい'
-    print("call:", txt)
-    res = talker.response(txt)
-    print("respond:", res)
+    print("#Start test")
+    talker = Talker(vocab_path=path.join(ROOT_PATH, args.vocab),
+                    model_path=path.join(ROOT_PATH, args.model))
+
+    try:
+        while True:
+            txt = input('in : ')
+            res = talker.response(txt)
+            print("out:", res)
+    except KeyboardInterrupt:
+        print("\n#End test")
 
 if __name__ == '__main__':
     main()

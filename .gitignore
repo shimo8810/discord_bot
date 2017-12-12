@@ -102,4 +102,5 @@ ENV/
 seq2seq_model/
 dataset/
 bot_config.json
+testbot_config.json
 test.py
