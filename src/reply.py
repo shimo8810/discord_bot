@@ -1,6 +1,8 @@
 from os import path
 import json
+import argparse
 import discord
+# 自作返答ライブラリ
 import respond
 
 #PATH関連
@@ -14,6 +16,7 @@ with open(path.join(ROOT_PATH, 'bot_config.json'), 'r') as f:
     CONFIG = json.load(f)
 
 #準備
+print("loading client and talker")
 client = discord.Client()
 talker = respond.Talker(vocab_path=path.join(ROOT_PATH, CONFIG['VocabPath']),
                         model_path=path.join(ROOT_PATH, CONFIG['ModelPath']))
@@ -39,5 +42,16 @@ async def on_ready():
     print(client.user.id)
     print('------')
 
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dev', '-v', action='store_true', default=False)
+    args = parser.parse_args()
+
+
+    config_file = 'testbot_config.json' if args.dev else 'bot_config.json'
+    with open(path.join(ROOT_PATH, config_file), 'r') as f:
+        conf = json.load(f)
+    client.run(conf['Token'])
+
 if __name__ == '__main__':
-    client.run(CONFIG['Token'])
+    main()
