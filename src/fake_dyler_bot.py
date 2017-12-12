@@ -14,9 +14,11 @@ FILE_PATH = path.dirname(path.abspath(__file__))
 ROOT_PATH = path.normpath(path.join(FILE_PATH, '../'))
 
 class FakeDylerBot(discord.Client):
-    def __init__(self):
+    def __init__(self, vocab_path, model_path):
         super(FakeDylerBot, self).__init__()
         self.is_online = None
+        self.talker = respond.Talker(vocab_path=path.join(ROOT_PATH, vocab_path),
+                                     model_path=path.join(ROOT_PATH, model_path))
 
     async def on_ready(self):
         print('Logged in as')
@@ -40,7 +42,10 @@ class FakeDylerBot(discord.Client):
 
         # 終了
         elif message.content.startswith('$おやすみ'):
-            msg = 'もう寝るわ'
+            if not self.is_online:
+                msg = 'Zzz...'
+            else:
+                msg = 'もう寝るわ'
             await self.send_message(message.channel, msg)
             await self.change_presence(status=discord.Status.dnd)
             self.is_online = False
@@ -49,15 +54,26 @@ class FakeDylerBot(discord.Client):
         # 通常のreply
         else:
             if self.is_online:
-                msg = "年は{}歳だよ".format(random.randint(0, 100))
-                await self.send_message(message.channel, msg)
+                res = self.talker.response(message.content)
+                print(message.content, " => ", res)
+                await self.send_message(message.channel, res)
 
 def main():
-    client = FakeDylerBot()
+    # 引数
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dev', '-v', action='store_true', default=False)
+    parser.add_argument('--vocab', '-v', type=str, default='seq2seq_model/vocab_skype_nucc.txt')
+    parser.add_argument('--model', '-m', type=str, default='seq2seq_model/seq2seq_conversation.npz')
+    parser.add_argument('--gpu', '-g', type=int, default=-1)
+    parser.add_argument('--layer', '-l', type=int, default=3)
+    parser.add_argument('--unit', '-u', type=int, default=256)
+    parser.add_argument('--dev', action='store_true', default=False)
     args = parser.parse_args()
 
+    # クライアント準備
+    client = FakeDylerBot(vocab_path=path.join(ROOT_PATH, args.vocab),
+                          model_path=path.join(ROOT_PATH, args.model))
+
+    # configファイル読み込み
     config_file = 'testbot_config.json' if args.dev else 'bot_config.json'
     with open(path.join(ROOT_PATH, config_file), 'r') as f:
         conf = json.load(f)
