@@ -128,13 +128,7 @@ class Talker():
             chainer.cuda.get_device(gpu).use()
             self.model.to_gpu(gpu)
         chainer.serializers.load_npz(model_path, self.model)
-<<<<<<< HEAD
-        self.tagger = MeCab.Tagger('-Owakati -d /usr/local/lib/mecab/dic/mecab-ipadic-neologd')
-=======
-
         self.tagger = MeCab.Tagger(mecab_tagger_option)
-
->>>>>>> fe680d84015e25a8120fc2256dad1c3eaef4e62d
 
     def _words2ids(self, txt):
         txt = mojimoji.zen_to_han(txt, kana=False)
