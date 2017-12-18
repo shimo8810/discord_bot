@@ -103,4 +103,6 @@ seq2seq_model/
 dataset/
 bot_config.json
 testbot_config.json
+twitter_config.json
 test.py
+twitter_corpus/
