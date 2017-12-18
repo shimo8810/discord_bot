@@ -6,6 +6,7 @@ import tweepy
 import unicodedata
 import re
 import csv
+from xml.sax.saxutils import unescape
 
 #PATH関連
 # このファイルの絶対パス
@@ -30,7 +31,8 @@ def normalzie(text):
     text = emoji_pattern.sub('', text)
     # 改行タブ文字除去
     text = text.replace('\n', ' ').replace('\t', ' ')
-    return text
+    # htmlエスケープ文字の修正
+    return unescape(text)
 
 class ReplyListener(tweepy.StreamListener):
     def __init__(self, api):
