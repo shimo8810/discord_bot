@@ -10,6 +10,10 @@ import chainer
 from chainer import cuda
 import chainer.functions as F
 import chainer.links as L
+import re
+import unicodedata
+from xml.sax.saxutils import unescape
+import subprocess
 
 UNK = 0
 EOS = 1
@@ -18,11 +22,34 @@ EOS = 1
 # このファイルの絶対パス
 FILE_PATH = path.dirname(path.abspath(__file__))
 # deep learningディレクトリのrootパス
-ROOT_PATH = path.normpath(path.join(FILE_PATH, '../'))
+ROOT_PATH = path.normpath(path.join(FILE_PATH, '../../'))
 
+# 絵文字のパターン
+emoji_pattern = re.compile("["
+        u"\U0001F600-\U0001F64F"  # emoticons
+        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+        u"\U0001F680-\U0001F6FF"  # transport & map symbols
+        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                           "]+", flags=re.UNICODE)
+
+#MeCabのディレクトリ
 mecab_tagger_option = '-Owakati -d '
 mecab_tagger_option += subprocess.check_output(['mecab-config', '--dicdir']).decode().strip()
 mecab_tagger_option += '/mecab-ipadic-neologd'
+
+
+def normalzie(text):
+    """
+    文字列の正規化関数
+    """
+    # unicode正規化
+    text = unicodedata.normalize('NFKC', text)
+    # emoji 除去
+    text = emoji_pattern.sub('', text)
+    # 改行タブ文字除去
+    text = text.replace('\n', ' ').replace('\t', ' ')
+    # htmlエスケープ文字の修正
+    return unescape(text)
 
 def sequence_embed(embed, xs):
     # embedにまとめて入れるために区切りを保存する
@@ -33,6 +60,17 @@ def sequence_embed(embed, xs):
     # データを再分割
     exs = F.split_axis(ex, x_section, 0)
     return exs
+
+def load_vocab(vocab_path):
+    """
+    語彙idを返す関数
+    '***' は<UNK>と統一で良さげ?
+    """
+    with open(vocab_path, 'r') as f:
+        word_ids = {line.strip() : i + 2 for i, line in enumerate(f)}
+    word_ids['<UNK>'] = UNK
+    word_ids['<EOS>'] = EOS
+    return word_ids
 
 class Seq2seq(chainer.Chain):
     """
@@ -99,25 +137,6 @@ class Seq2seq(chainer.Chain):
             outs.append(y)
         return outs
 
-def load_vocab(vocab_path):
-    """
-    語彙idを返す関数
-    '***' は<UNK>と統一で良さげ?
-    """
-    with open(vocab_path, 'r') as f:
-        word_ids = {line.strip() : i + 2 for i, line in enumerate(f)}
-    word_ids['<UNK>'] = UNK
-    word_ids['<EOS>'] = EOS
-    return word_ids
-
-def words2ids(txt):
-    tagger = MeCab.Tagger(mecab_tagger_option)
-
-    txt = mojimoji.zen_to_han(txt, kana=False)
-    txt = tagger.parse(txt)
-    txt = txt.strip().split(' ')
-    return txt
-
 class Talker():
     def __init__(self, vocab_path='vocab_skype_nucc.txt', gpu=-1, model_path='seq2seq_conversation.npz'):
         self.word_ids = load_vocab(vocab_path)
@@ -131,7 +150,7 @@ class Talker():
         self.tagger = MeCab.Tagger(mecab_tagger_option)
 
     def _words2ids(self, txt):
-        txt = mojimoji.zen_to_han(txt, kana=False)
+        txt = normalzie(txt)
         txt = self.tagger.parse(txt)
         txt = txt.strip().split(' ')
         txt = np.array([self.word_ids.get(w, UNK) for w in txt], 'i')

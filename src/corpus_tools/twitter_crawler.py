@@ -7,14 +7,15 @@ import unicodedata
 import re
 import csv
 from xml.sax.saxutils import unescape
+import urllib3
 
 #PATH関連
 # このファイルの絶対パス
 FILE_PATH = path.dirname(path.abspath(__file__))
 # deep learningディレクトリのrootパス
-ROOT_PATH = path.normpath(path.join(FILE_PATH, '../'))
+ROOT_PATH = path.normpath(path.join(FILE_PATH, '../../'))
 
-with open(path.join(ROOT_PATH, 'twitter_config.json'), 'r') as f:
+with open(path.join(ROOT_PATH, 'config/twitter_config.json'), 'r') as f:
     CONFIG = json.load(f)
 
 emoji_pattern = re.compile("["
@@ -35,12 +36,13 @@ def normalzie(text):
     return unescape(text)
 
 class ReplyListener(tweepy.StreamListener):
-    def __init__(self, api):
+    def __init__(self, api, file_name):
         super(ReplyListener, self).__init__()
         self.api = api
+        self.file_name = file_name
 
     def dump(self, in_txt, out_txt):
-        with open(path.join(ROOT_PATH, 'twitter_corpus/corpus.csv'), 'a') as f:
+        with open(path.join(ROOT_PATH, 'conversation_corpus/twitter_corpus/{}_corpus.csv'.format(self.file_name)), 'a') as f:
             writer = csv.writer(f, lineterminator='\n', delimiter='\t')
             writer.writerow((in_txt, out_txt))
 
@@ -63,22 +65,34 @@ class ReplyListener(tweepy.StreamListener):
         return True
 
     def on_error(self, status):
+        time.sleep(60)
         print('On Error:', status)
 
     def on_limit(self, status):
+        time.sleep(60)
         print('On limit', status)
 
 def main():
+    # 認証
     auth = tweepy.OAuthHandler(CONFIG['ConsumerKey'], CONFIG['ConsumerSecret'])
     auth.set_access_token(CONFIG['AccessToken'], CONFIG['AccessTokenSecret'])
     api = tweepy.API(auth)
 
-    listener = ReplyListener(api=api)
+    # ファイル名 (今日の日付)
+    file_name = datetime.date.today().strftime('%Y%m%d')
+
+    # stream 準備
+    listener = ReplyListener(api=api, file_name=file_name)
     stream = tweepy.Stream(auth=auth, listener=listener)
 
+    # がばがばerror handling
     try:
         while True:
-            stream.sample(languages=["ja"])
+            try:
+                stream.sample(languages=["ja"])
+            except urllib3.exceptions.ProtocolError as err:
+                print(err)
+                time.sleep(300)
     finally:
         stream.disconnect()
         print('finished proc')

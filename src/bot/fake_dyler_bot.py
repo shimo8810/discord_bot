@@ -11,7 +11,7 @@ import random
 # このファイルの絶対パス
 FILE_PATH = path.dirname(path.abspath(__file__))
 # deep learningディレクトリのrootパス
-ROOT_PATH = path.normpath(path.join(FILE_PATH, '../'))
+ROOT_PATH = path.normpath(path.join(FILE_PATH, '../../'))
 
 class FakeDylerBot(discord.Client):
     def __init__(self, vocab_path, model_path):
@@ -75,7 +75,7 @@ def main():
 
     # configファイル読み込み
     config_file = 'testbot_config.json' if args.dev else 'bot_config.json'
-    with open(path.join(ROOT_PATH, config_file), 'r') as f:
+    with open(path.join(ROOT_PATH, 'config', config_file), 'r') as f:
         conf = json.load(f)
     client.run(conf['Token'])
 

@@ -106,3 +106,4 @@ testbot_config.json
 twitter_config.json
 test.py
 twitter_corpus/
+conversation_corpus/*_corpus/*
