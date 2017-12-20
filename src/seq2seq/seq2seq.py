@@ -78,15 +78,15 @@ def load_vocab(vocab_path, ratio=1.0):
     語彙idを返す関数
     '***' は<UNK>と統一で良さげ?
     """
+    with open(path.join(ROOT_PATH, vocab_path), 'r') as f:
+        word_ids = {line.strip() : i + 2 for i, line in enumerate(f)}
+    # word_ids = {}
     # with open(vocab_path, 'r') as f:
-    #     word_ids = {line.strip() : i + 2 for i, line in enumerate(f)}
-    word_ids = {}
-    with open(vocab_path, 'r') as f:
-        length = len(list(f)) * ratio
-        for i, line in enumerate(f):
-            if i + 2 > length:
-                break
-            word_ids[line.strip()] = i + 2
+    #     length = len(list(f)) * ratio
+    #     for i, line in enumerate(f):
+    #         if i + 2 > length:
+    #             break
+    #         word_ids[line.strip()] = i + 2
     word_ids['<UNK>'] = UNK
     word_ids['<EOS>'] = EOS
     return word_ids
@@ -97,11 +97,11 @@ def load_data(vocab, seq_in, seq_out):
     """
     x_data = []
     y_data = []
-    with open(seq_in, 'r') as f:
+    with open(path.join(ROOT_PATH, seq_in), 'r') as f:
         for line in f:
             words = line.strip().split(' ')
             x_data.append(np.array([vocab.get(w, UNK) for w in words], 'i'))
-    with open(seq_out, 'r') as f:
+    with open(path.join(ROOT_PATH, seq_out), 'r') as f:
         for line in f:
             words = line.strip().split(' ')
             y_data.append(np.array([vocab.get(w, UNK) for w in words], 'i'))
@@ -135,9 +135,9 @@ def main():
     main関数
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--vocab', '-v', type=str, default='dataset/vocab.txt')
-    parser.add_argument('--seq_in', '-i', type=str, default='dataset/input_sequence.txt')
-    parser.add_argument('--seq_out', '-o', type=str, default='dataset/output_sequence.txt')
+    parser.add_argument('--vocab', '-v', type=str, default='conversation_corpus/vocab.txt')
+    parser.add_argument('--seq_in', '-i', type=str, default='conversation_corpus/input_sequence.txt')
+    parser.add_argument('--seq_out', '-o', type=str, default='conversation_corpus/output_sequence.txt')
     parser.add_argument('--epoch', '-e', type=int, default=100)
     parser.add_argument('--log_epoch', type=int, default=1)
     parser.add_argument('--alpha', '-a', type=float, default=0.001)
@@ -150,7 +150,7 @@ def main():
     args = parser.parse_args()
 
     # save didrectory
-    outdir = path.join(FILE_PATH, 'results/seq2seq_conversation_epoch_{}_layer_{}_unit_{}_vr_{}'.format(
+    outdir = path.join(ROOT_PATH, 'seq2seq_results/seq2seq_conversation_epoch_{}_layer_{}_unit_{}_vr_{}'.format(
         args.epoch, args.layer, args.unit, args.vocab_ratio))
     if not path.exists(outdir):
         os.makedirs(outdir)
