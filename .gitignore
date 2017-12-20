@@ -100,10 +100,10 @@ ENV/
 # mypy
 .mypy_cache/
 seq2seq_model/
+seq2seq_results
 dataset/
-bot_config.json
-testbot_config.json
-twitter_config.json
 test.py
 twitter_corpus/
 conversation_corpus/*_corpus/*
+config/*.json
+conversation_corpus/*.txt
