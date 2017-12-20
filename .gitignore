@@ -107,3 +107,4 @@ twitter_corpus/
 conversation_corpus/*_corpus/*
 config/*.json
 conversation_corpus/*.txt
+_*

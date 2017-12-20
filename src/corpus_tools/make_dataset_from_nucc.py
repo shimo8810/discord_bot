@@ -8,6 +8,12 @@ import unicodedata
 from xml.sax.saxutils import unescape
 import subprocess
 
+#PATH関連
+# このファイルの絶対パス
+FILE_PATH = path.dirname(path.abspath(__file__))
+# deep learningディレクトリのrootパス
+ROOT_PATH = path.normpath(path.join(FILE_PATH, '../../'))
+
 mecab_tagger_option = '-Owakati -d '
 mecab_tagger_option += subprocess.check_output(['mecab-config', '--dicdir']).decode().strip()
 mecab_tagger_option += '/mecab-ipadic-neologd'
@@ -33,7 +39,8 @@ if __name__ == '__main__':
     # Mecabの準備
     tagger = MeCab.Tagger(mecab_tagger_option)
     # ファイル読み込み
-    fname_list = sorted(glob('dataset/nucc/data*.txt'))
+    fname_list = sorted(glob(path.join(ROOT_PATH, 'conversation_corpus/nucc_corpus/data/data*.txt')))
+
     sequence_pairs = []
     # 各ファイルに対して
     for fname in tqdm(fname_list):
@@ -41,9 +48,6 @@ if __name__ == '__main__':
             last_line = None
 
             for line in f:
-                # 全角文字を半角文字に変換,かなは全角のまま
-                line = mojimoji.zen_to_han(line, kana=False)
-
                 if line[0] == '@':
                     # メタデータ行は無視
                     continue
@@ -64,30 +68,16 @@ if __name__ == '__main__':
     # 語彙リスト
     vocab = []
 
-    f_in = open('dataset/input_sequence_nucc.txt' , 'w')
-    f_out = open('dataset/output_sequence_nucc.txt' , 'w')
-    for seq_in, seq_out in tqdm(sequence_pairs):
-        # 入力側
-        seq_in = tagger.parse(seq_in)
-        f_in.write(seq_in)
-        seq_in = seq_in.split(' ')
-        # 語彙 追加
-        for word in seq_in:
-            if not word in vocab:
-                vocab.append(word)
-        # 出力側
-        seq_out = tagger.parse(seq_out)
-        f_out.write(seq_out)
-        seq_out =  seq_out.split(' ')
-        # 語彙 追加
-        for word in seq_out:
-            if not word in vocab:
-                vocab.append(word)
+    with  open('conversation_corpus/nucc_corpus/input_sequence_nucc.txt' , 'w') as f_in, \
+          open('conversation_corpus/nucc_corpus/output_sequence_nucc.txt' , 'w') as f_out:
 
-    f_in.close()
-    f_out.close()
+        for seq_in, seq_out in tqdm(sequence_pairs):
+            # 入力側
+            seq_in = tagger.parse(seq_in)
+            f_in.write(seq_in)
+            seq_in = seq_in.split(' ')
+            # 出力側
+            seq_out = tagger.parse(seq_out)
+            f_out.write(seq_out)
+            seq_out =  seq_out.split(' ')
 
-    print(len(vocab))
-    with open('dataset/vocab_nucc.txt', 'w') as f:
-        for w in vocab:
-            f.write(w + '\n')

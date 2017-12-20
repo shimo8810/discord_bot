@@ -1,3 +1,4 @@
+from os import path
 import csv
 import mojimoji
 from tqdm import tqdm
@@ -7,6 +8,11 @@ import unicodedata
 from xml.sax.saxutils import unescape
 import subprocess
 
+#PATH関連
+# このファイルの絶対パス
+FILE_PATH = path.dirname(path.abspath(__file__))
+# deep learningディレクトリのrootパス
+ROOT_PATH = path.normpath(path.join(FILE_PATH, '../../'))
 
 mecab_tagger_option = '-Owakati -d '
 mecab_tagger_option += subprocess.check_output(['mecab-config', '--dicdir']).decode().strip()
@@ -38,7 +44,7 @@ if __name__ == '__main__':
     speaker_in = None
     speaker_out = None
     sequence_pairs = []
-    with open('./dataset/skype_conv_log.csv', 'r') as f:
+    with open(path.join(ROOT_PATH, 'conversation_corpus/skype_corpus/skype_conv_log.csv'), 'r') as f:
         reader = csv.reader(f, delimiter='\t')
         next(reader)
         for row in reader:
@@ -52,8 +58,6 @@ if __name__ == '__main__':
                 # 全角を半角に変換
                 si = normalzie(seq_in)
                 so = normalzie(seq_out)
-                # si = mojimoji.zen_to_han(seq_in, kana=False)
-                # so = mojimoji.zen_to_han(seq_out, kana=False)
                 # sequenceペアに追加
                 sequence_pairs.append((si, so))
 
@@ -61,31 +65,16 @@ if __name__ == '__main__':
             else:
                 speaker_in, seq_in = row
 
-    vocab = []
-    f_in = open('dataset/input_sequence_skype_log_normalized.txt', 'w')
-    f_out = open('dataset/output_sequence_skype_log_normalized.txt', 'w')
-    for seq_in, seq_out in tqdm(sequence_pairs):
-        # 入力側
-        seq_in = tagger.parse(seq_in)
-        f_in.write(seq_in)
-        seq_in = seq_in.split(' ')
-        # 語彙 追加
-        for word in seq_in:
-            if not word in vocab:
-                vocab.append(word)
-        # 出力側
-        seq_out = tagger.parse(seq_out)
-        f_out.write(seq_out)
-        seq_out =  seq_out.split(' ')
-        # 語彙 追加
-        for word in seq_out:
-            if not word in vocab:
-                vocab.append(word)
+    with  open(path.join(ROOT_PATH, 'conversation_corpus/skype_corpus/input_sequence_skype.txt'), 'w') as f_in, \
+          open(path.join(ROOT_PATH, 'conversation_corpus/skype_corpus/output_sequence_skype.txt'), 'w') as f_out:
 
-    f_in.close()
-    f_out.close()
+        for seq_in, seq_out in tqdm(sequence_pairs):
+            # 入力側
+            seq_in = tagger.parse(seq_in)
+            f_in.write(seq_in)
+            seq_in = seq_in.split(' ')
 
-    print(len(vocab))
-    with open('dataset/skype_vocab_normalized.txt', 'w') as f:
-        for w in vocab:
-            f.write(w + '\n')
+            # 出力側
+            seq_out = tagger.parse(seq_out)
+            f_out.write(seq_out)
+            seq_out = seq_out.split(' ')
