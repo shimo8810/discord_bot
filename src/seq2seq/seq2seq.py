@@ -79,14 +79,14 @@ def load_vocab(vocab_path, ratio=1.0):
     '***' は<UNK>と統一で良さげ?
     """
     with open(path.join(ROOT_PATH, vocab_path), 'r') as f:
-        word_ids = {line.strip() : i + 2 for i, line in enumerate(f)}
-    # word_ids = {}
-    # with open(vocab_path, 'r') as f:
-    #     length = len(list(f)) * ratio
-    #     for i, line in enumerate(f):
-    #         if i + 2 > length:
-    #             break
-    #         word_ids[line.strip()] = i + 2
+        num_words = sum(1 for line in f)
+    word_ids = {}
+    with open(path.join(ROOT_PATH, vocab_path), 'r') as f:
+        for i, line in enumerate(f):
+            if i > num_words * ratio:
+                break
+            word_ids[line.strip()] = i + 2
+        # word_ids = {line.strip() : i + 2 for i, line in enumerate(f)}
     word_ids['<UNK>'] = UNK
     word_ids['<EOS>'] = EOS
     return word_ids
