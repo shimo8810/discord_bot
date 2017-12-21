@@ -19,6 +19,8 @@ class FakeDylerBot(discord.Client):
         self.is_online = None
         self.talker = respond.Talker(vocab_path=path.join(ROOT_PATH, vocab_path),
                                      model_path=path.join(ROOT_PATH, model_path))
+        self.__version__ = '0.0.72'
+        self.__auther__ = 'Ikenov'
 
     async def on_ready(self):
         print('Logged in as')
@@ -29,11 +31,20 @@ class FakeDylerBot(discord.Client):
         self.is_online = True
 
     async def on_message(self, message):
+        """
+        自動返答Bot
+        online状態のときで以下のコマンド以外のメッセージにはすべて返答する.
+
+        コマンド一覧
+            - $起きて or $wake: botの状態がonlineに変化
+            - $おやすみ or $halt: botの状態がdndに変化
+            - $ヘルプ or $help: botのヘルプ出力
+        """
         if message.author == self.user:
             return
 
         # 起動
-        if message.content.startswith('$起きて'):
+        if message.content.startswith('$起きて') or message.content.startswith('$wake'):
             await self.change_presence(status=discord.Status.online)
             msg = "何?"
             await self.send_message(message.channel, msg)
@@ -41,7 +52,7 @@ class FakeDylerBot(discord.Client):
             return
 
         # 終了
-        elif message.content.startswith('$おやすみ'):
+        elif message.content.startswith('$おやすみ') or message.content.startswith('$halt'):
             if not self.is_online:
                 msg = 'Zzz...'
             else:
@@ -51,6 +62,17 @@ class FakeDylerBot(discord.Client):
             self.is_online = False
             return
 
+        elif message.content.startswith('$help') or message.content.startswith('$ヘルプ'):
+            msg = '```\n' + self.on_message.__doc__ + '```'
+            await self.send_message(message.channel, msg)
+
+        elif message.content.startswith('$about'):
+            msg = "```" + \
+                "\nDiscord Bot" * \
+                "\n version:" + self.__version__ + \
+                "\n auther:" + self.__auther__ + \
+                "```"
+            await self.send_message(message.channel, msg)
         # 通常のreply
         else:
             if self.is_online:
