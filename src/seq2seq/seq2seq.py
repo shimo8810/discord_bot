@@ -70,7 +70,8 @@ class Seq2seq(chainer.Chain):
         concat_os = F.concat(os, axis=0)
         concat_ys_out = F.concat(ys_out, axis=0)
         loss = F.sum(F.softmax_cross_entropy(self.W(concat_os), concat_ys_out, reduce='no')) / batch
-        chainer.report({'loss': loss.data}, self)
+        perp = self.xp.exp(loss.data * batch / concat_ys_out.shape[0])
+        chainer.report({'loss': loss.data, 'perp': perp}, self)
         return loss
 
 def load_vocab(vocab_path, ratio=1.0):
@@ -198,7 +199,7 @@ def main():
     trainer.extend(extensions.observe_lr(), trigger=(args.log_epoch, 'epoch'))
     # print info
     trainer.extend(extensions.PrintReport(
-        ['epoch', 'iteration', 'main/loss', 'lr', 'elapsed_time']), trigger=(args.log_epoch, 'epoch'))
+        ['epoch', 'iteration', 'main/loss','main/perp', 'lr', 'elapsed_time']), trigger=(args.log_epoch, 'epoch'))
     # print progbar
     trainer.extend(extensions.ProgressBar())
     # plot loss graph
