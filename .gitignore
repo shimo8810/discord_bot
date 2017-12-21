@@ -99,7 +99,8 @@ ENV/
 
 # mypy
 .mypy_cache/
-seq2seq_model/
+seq2seq_model/*.npz
+seq2seq_model/*.txt
 seq2seq_results
 dataset/
 test.py
