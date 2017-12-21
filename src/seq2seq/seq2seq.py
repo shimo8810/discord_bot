@@ -74,20 +74,13 @@ class Seq2seq(chainer.Chain):
         chainer.report({'loss': loss.data, 'perp': perp}, self)
         return loss
 
-def load_vocab(vocab_path, ratio=1.0):
+def load_vocab(vocab_path):
     """
     語彙idを返す関数
     '***' は<UNK>と統一で良さげ?
     """
     with open(path.join(ROOT_PATH, vocab_path), 'r') as f:
-        num_words = sum(1 for line in f)
-    word_ids = {}
-    with open(path.join(ROOT_PATH, vocab_path), 'r') as f:
-        for i, line in enumerate(f):
-            if i > num_words * ratio:
-                break
-            word_ids[line.strip()] = i + 2
-        # word_ids = {line.strip() : i + 2 for i, line in enumerate(f)}
+        word_ids = {line.strip() : i + 2 for i, line in enumerate(f)}
     word_ids['<UNK>'] = UNK
     word_ids['<EOS>'] = EOS
     return word_ids
@@ -146,13 +139,12 @@ def main():
     parser.add_argument('--batch', '-b', type=int, default=64)
     parser.add_argument('--layer', '-l', type=int, default=3)
     parser.add_argument('--unit', '-u', type=int, default=256)
-    parser.add_argument('--vocab_ratio', '-r', type=float, default=1.0)
     parser.add_argument('--lr_shift', '-s', action='store_true', default=False)
     args = parser.parse_args()
 
     # save didrectory
-    outdir = path.join(ROOT_PATH, 'seq2seq_results/seq2seq_conversation_epoch_{}_layer_{}_unit_{}_vr_{}'.format(
-        args.epoch, args.layer, args.unit, args.vocab_ratio))
+    outdir = path.join(ROOT_PATH, 'seq2seq_results/seq2seq_conversation_epoch_{}_layer_{}_unit_{}_vocab_{}'.format(
+        args.epoch, args.layer, args.unit, args.vocab.strip().split('/')[-1].split('.')[0]))
     if not path.exists(outdir):
         os.makedirs(outdir)
     with open(path.join(outdir, 'arg_param.txt'), 'w') as f:
@@ -171,7 +163,7 @@ def main():
     print('')
 
     # load dataset
-    vocab_ids = load_vocab(args.vocab, 0.7)
+    vocab_ids = load_vocab(args.vocab)
     train_data = load_data(vocab_ids, args.seq_in, args.seq_out)
 
     # prepare model
