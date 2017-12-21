@@ -1,12 +1,14 @@
+"""
+skype 対話コーパス
+"""
 from os import path
 import csv
-import mojimoji
-from tqdm import tqdm
-import MeCab
 import re
 import unicodedata
 from xml.sax.saxutils import unescape
 import subprocess
+from tqdm import tqdm
+import MeCab
 
 #PATH関連
 # このファイルの絶対パス
@@ -44,6 +46,7 @@ if __name__ == '__main__':
     speaker_in = None
     speaker_out = None
     sequence_pairs = []
+
     with open(path.join(ROOT_PATH, 'conversation_corpus/skype_corpus/skype_conv_log.csv'), 'r') as f:
         reader = csv.reader(f, delimiter='\t')
         next(reader)
