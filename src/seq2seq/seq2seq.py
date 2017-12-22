@@ -15,6 +15,8 @@ import chainer.functions as F
 import chainer.links as L
 from chainer import training
 from chainer.training import extensions
+from chainerui.extensions import CommandsExtension
+from chainerui.utils import save_args
 
 #PATH関連
 # このファイルの絶対パス
@@ -42,7 +44,9 @@ class Seq2seq(chainer.Chain):
     def __init__(self, n_layers, n_vocab, n_units):
         super(Seq2seq, self).__init__()
         with self.init_scope():
-            self.embed = L.EmbedID(n_vocab, n_units)
+            self.embed_x = L.EmbedID(n_vocab, n_units)
+            self.embed_y = L.EmbedID(n_vocab, n_units)
+
             self.encoder = L.NStepLSTM(n_layers, n_units, n_units, 0.1)
             self.decoder = L.NStepLSTM(n_layers, n_units, n_units, 0.1)
             self.W = L.Linear(n_units, n_vocab)
@@ -59,8 +63,8 @@ class Seq2seq(chainer.Chain):
         ys_out = [F.concat([y, eos], axis=0) for y in ys]
 
         #
-        exs = sequence_embed(self.embed, xs)
-        eys = sequence_embed(self.embed, ys_in)
+        exs = sequence_embed(self.embed_x, xs)
+        eys = sequence_embed(self.embed_y, ys_in)
 
         batch = len(xs)
 
@@ -140,6 +144,7 @@ def main():
     parser.add_argument('--layer', '-l', type=int, default=3)
     parser.add_argument('--unit', '-u', type=int, default=256)
     parser.add_argument('--lr_shift', '-s', action='store_true', default=False)
+    parser.add_argument('--resume', '-r', default='')
     args = parser.parse_args()
 
     # save didrectory
@@ -201,6 +206,15 @@ def main():
     trainer.extend(extensions.snapshot(), trigger=(10, 'epoch'))
     trainer.extend(extensions.snapshot_object(
         model, 'model_snapshot_{.updater.epoch}'), trigger=(10, 'epoch'))
+
+    if args.resume:
+        # Resume from a snapshot
+        chainer.serializers.load_npz(args.resume, trainer)
+
+    # [ChainerUI] enable to send commands from ChainerUI
+    trainer.extend(CommandsExtension())
+    # [ChainerUI] save 'args' to show experimental conditions
+    save_args(args, outdir)
 
     # start learn
     print('start training')

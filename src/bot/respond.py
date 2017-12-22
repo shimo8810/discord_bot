@@ -79,7 +79,8 @@ class Seq2seq(chainer.Chain):
     def __init__(self, n_layers, n_vocab, n_units):
         super(Seq2seq, self).__init__()
         with self.init_scope():
-            self.embed = L.EmbedID(n_vocab, n_units)
+            self.embed_x = L.EmbedID(n_vocab, n_units)
+            self.embed_y = L.EmbedID(n_vocab, n_units)
             self.encoder = L.NStepLSTM(n_layers, n_units, n_units, 0.1)
             self.decoder = L.NStepLSTM(n_layers, n_units, n_units, 0.1)
             self.W = L.Linear(n_units, n_vocab)
@@ -96,8 +97,8 @@ class Seq2seq(chainer.Chain):
         ys_out = [F.concat([y, eos], axis=0) for y in ys]
 
         #
-        exs = sequence_embed(self.embed, xs)
-        eys = sequence_embed(self.embed, ys_in)
+        exs = sequence_embed(self.embed_x, xs)
+        eys = sequence_embed(self.embed_y, ys_in)
 
         batch = len(xs)
 
@@ -114,12 +115,12 @@ class Seq2seq(chainer.Chain):
         batch = len(xs)
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             xs = [x[::-1] for x in xs]
-            exs = sequence_embed(self.embed, xs)
+            exs = sequence_embed(self.embed_x, xs)
             h, c, _ = self.encoder(None, None, exs)
             ys = self.xp.full(batch, EOS, 'i')
             res = []
             for i in range(max_length):
-                eys = self.embed(ys)
+                eys = self.embed_y(ys)
                 eys = F.split_axis(eys, batch, 0)
                 h, c, ys = self.decoder(h, c, eys)
                 cys = F.concat(ys, axis=0)
