@@ -109,3 +109,4 @@ conversation_corpus/*_corpus/*
 config/*.json
 conversation_corpus/*.txt
 _*
+.vscode/
